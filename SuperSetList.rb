@@ -96,9 +96,7 @@ class SuperSetList
   ## _n_:: an Integer
   ## *return*:: an element.  nil if the list is over.
   def nth(_n)
-    if(_n < @knownList.size) then
-      return @knownList[_n] ;
-    elsif(@isComplete) then
+    if(_n >= @knownList.size && @isComplete) then
       return nil ;
     else
       until(_n < @knownList.size) 
@@ -216,7 +214,8 @@ if($0 == __FILE__) then
 
       k = 0 ;
       ssList4.each{|set|
-        p [k, set, ssList4] ;
+#        p [k, set, ssList4] ;
+        p [k, set] ;
         k += 1;
       }
     end
