@@ -63,6 +63,7 @@ class SuperSetList
     @atomList = _atomList ;
     @motherIndex = _initIndex ;
     @isComplete = @motherList.nil?
+    self.seedSet() ;
 
     if(@motherList && @atomList.nil?) then
       raise "atomList is required to create #{self} instance." ;
@@ -83,9 +84,9 @@ class SuperSetList
   ## _motherList_:: a mother List
   ## _filter_:: filtering condition body. a Procedure
   ## _initIndex_:: initial mother index.
-  def self.newBaseList(_baseList)
+  def self.newRootList(_rootList)
     _ssList = self.new() ;
-    _ssList.setKnownList(_baseList) ;
+    _ssList.setKnownList(_rootList) ;
     return _ssList ;
   end
 
@@ -107,19 +108,22 @@ class SuperSetList
           return nil ;
         end
         ## check all of @atomList is included.
-        _filterFlag = true ;
-        @atomList.each{|_atom|
-          if(!_candidate.include?(_atom)) then
-            _filterFlag = false ;
-            break ;
-          end
-        }
-        @knownList.push(_candidate) if(_filterFlag) ;
+        @knownList.push(_candidate) if(self.shouldInclude(_candidate)) ;
       end
       return @knownList[_n] ;
     end
   end
 
+  #--------------------------------
+  #++
+  ## check a set should be include
+  def shouldInclude(_candidate)
+    @atomList.each{|_atom|
+      return false if(!_candidate.include?(_atom)) ;
+    }
+    return true ;
+  end
+  
   #--------------------------------------------------------------
   #++
   ## []
@@ -145,12 +149,15 @@ class SuperSetList
   #--------------------------------------------------------------
   #++
   ## 最大積集合
-  def intersectionSet()
-    if(@atomList.nil?) then
-      return [] ;
-    else
-      return @motherList.intersectionSet().concat(@atomList) ;
+  def seedSet()
+    if(@seedSet.nil?) then
+      if(@atomList.nil?) then
+        @seedSet = [] ;
+      else
+        @seedSet = @motherList.seedSet().dup().concat(@atomList) ;
+      end
     end
+    return @seedSet ;
   end
   
   #--////////////////////////////////////////////////////////////
@@ -191,7 +198,7 @@ if($0 == __FILE__) then
     #++
     ## simple list test
     def test_a
-      ssList0 = SuperSetList.newBaseList([:a, :b, :c]) ;
+      ssList0 = SuperSetList.newRootList([:a, :b, :c]) ;
       ssList0.each{|set|
         pp set ;
       }
@@ -202,15 +209,15 @@ if($0 == __FILE__) then
     ## whole combination
     def test_b
       atomList = [:a, :b, :c, :d, :e, :f] ;
-      combList = genBaseList(atomList) ;
+      combList = genCombList(atomList) ;
       
-      ssList0 = SuperSetList.newBaseList(combList) ;
+      ssList0 = SuperSetList.newRootList(combList) ;
       ssList1 = SuperSetList.new(ssList0, [:a]) ;
       ssList2 = SuperSetList.new(ssList1, [:b]) ;
       ssList3 = SuperSetList.new(ssList2, [:c]) ;
       ssList4 = SuperSetList.new(ssList3, [:e]) ;
 
-      pp [:init, ssList4, :intersection, ssList4.intersectionSet()] ;
+      pp [:init, ssList4, :seed, ssList4.seedSet()] ;
 
       k = 0 ;
       ssList4.each{|set|
@@ -221,7 +228,7 @@ if($0 == __FILE__) then
     end
 
     #----------------------
-    def genBaseList(atomList)
+    def genCombList(atomList)
       combList = [] ;
       (0..atomList.size).each{|k|
         combList.concat(atomList.combination(k).to_a) ;
