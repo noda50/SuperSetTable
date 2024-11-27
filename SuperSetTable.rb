@@ -215,6 +215,20 @@ if($0 == __FILE__) then
       return combList ;
     end
 
+    #----------------------
+    def genCombList2(atomList, dropProb = 0.0)
+      combList = [] ;
+      (0..atomList.size).each{|k|
+        combList.concat(atomList.combination(k).to_a) ;
+      }
+      nofDrop = (combList.size.to_f * dropProb).to_i ;
+      (0...nofDrop).each{
+        r = rand(combList.size) ;
+        combList.delete_at(r) ;
+      }
+      return combList ;
+    end
+
     #----------------------------------------------------
     #++
     ## count test
@@ -245,6 +259,51 @@ if($0 == __FILE__) then
       size = rootList.size ;
       p [:result, :count, checkCount, size, checkCount.to_f / (size * size)] ;
     end
+
+    #----------------------------------------------------
+    #++
+    ## count test 2
+    def test_c
+#      atomList = [:a, :b, :c, :d, :e, :f] ;
+#      atomList = [:a, :b, :c, :d, :e, :f, :g, :h, :i, :j, :k] ;
+#      atomList = [:a, :b, :c, :d, :e, :f, :g, :h, :i, :j, :k, :l, :m, :n,
+#                  :o, :p, :q, :r, :s, :t, :u, :v, :w, :x, :y, :z] ; 
+      atomList = [:a, :b, :c, :d, :e, :f, :g, :h, :i, :j, :k, :l, :m, :n,
+                  :o, :p, :q,
+                 ] ;
+
+      prob = 0.5 ;
+      rootList = genCombList2(atomList, prob) ;
+
+      ssTable = SuperSetTable.new(rootList) ;
+
+      checkCount = 0 ;
+      zSetCount = 0 ;
+      startTime = Time.now() ;
+      preTime = Time.now() ;
+      rootList.each{|zSet|
+        zSetCount += 1 ;
+        next if(zSet.size == 0) ;
+        listSize = 0 ;
+        zSet.each{|q|
+          zSubSet = zSet.dup ;
+          zSubSet.delete(q) ;
+          ssTable.getList(zSubSet, true).each{|set|
+            checkCount += 1;
+            listSize += 1 ;
+          }
+        }
+        cycleTime = Time.now() ;
+        p [:cycle_zSet, zSetCount, ssTable.listTable.size,
+           listSize, checkCount,
+           cycleTime - startTime, cycleTime - preTime] ;
+        preTime = cycleTime ;
+      }
+
+      size = rootList.size ;
+      p [:result, :count, checkCount, size, checkCount.to_f / (size * size)] ;
+    end
+    
 
   end # class TC_Foo < Test::Unit::TestCase
 end # if($0 == __FILE__)
