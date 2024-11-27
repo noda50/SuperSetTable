@@ -155,6 +155,7 @@ class SuperSetList
         @seedSet = [] ;
       else
         @seedSet = @motherList.seedSet().dup().concat(@atomList) ;
+        @seedSet.sort!() ;
       end
     end
     return @seedSet ;
